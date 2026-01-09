@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shawn Peter Britto | Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap');
+
+        :root {
+            --bg-color: #f4f4f0;
+            --text-color: #1a1a1a;
+            --accent-color: #3b82f6;
+            --tv-frame: #2a2a2a;
+            --tv-screen-off: #111;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Space Grotesk', sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        h1, h2, h3, .brand-font {
+            font-family: 'Syne', sans-serif;
+        }
+
+        /* TV Styling */
+        .tv-container {
+            position: relative;
+            width: 320px;
+            height: 260px;
+            background: var(--tv-frame);
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 
+                20px 20px 60px #bebebe, 
+                -20px -20px 60px #ffffff,
+                inset 2px 2px 5px rgba(255,255,255,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .tv-container:hover {
+            transform: scale(1.02);
+        }
+
+        .tv-screen-bezel {
+            width: 100%;
+            height: 85%;
+            background: #000;
+            border-radius: 12px;
+            padding: 4px; /* Inner bezel */
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #333;
+        }
+
+        .tv-screen {
+            width: 100%;
+            height: 100%;
+            background: var(--tv-screen-off);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            /* Scanlines effect */
+            background: radial-gradient(circle, #1a1a1a 0%, #000000 100%);
+        }
+
+        .tv-screen::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* CRT Screen Curvature/Shine */
+        .tv-screen::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0) 60%, rgba(0,0,0,0.4) 100%);
+            z-index: 3;
+            pointer-events: none;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .tv-controls {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 10px;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .knob {
+            width: 24px;
+            height: 24px;
+            background: #444;
+            border-radius: 50%;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .knob::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 50%;
+            width: 2px;
+            height: 8px;
+            background: #888;
+            transform: translateX(-50%);
+        }
+
+        .vent-slots {
+            flex-grow: 1;
+            display: flex;
+            gap: 3px;
+            height: 10px;
+        }
+        
+        .vent {
+            width: 40px;
+            height: 4px;
+            background: #111;
+            border-radius: 2px;
+            margin-left: 10px;
+        }
+
+        /* Canvas */
+        canvas#tvCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Channel OSD (On Screen Display) */
+        .channel-osd {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-family: 'Courier New', monospace;
+            color: #0f0;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 0px #000;
+            z-index: 4;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        /* Minimal Card Styling */
+        .project-card {
+            transition: all 0.3s ease;
+            border: 1px solid #e5e5e5;
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+            border-color: #1a1a1a;
+            box-shadow: 8px 8px 0px #1a1a1a;
+        }
+
+        /* Hide scrollbar for clean look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+        @media (min-width: 768px) {
+            .tv-container {
+                width: 420px;
+                height: 340px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 w-full z-50 px-6 py-6 flex justify-between items-center mix-blend-difference text-white">
+        <a href="#" class="text-2xl font-bold brand-font tracking-tighter">SPB.</a>
+        <div class="hidden md:flex gap-8 text-sm font-medium tracking-wide">
+            <a href="#about" class="hover:opacity-50 transition-opacity">ABOUT</a>
+            <a href="#projects" class="hover:opacity-50 transition-opacity">WORK</a>
+            <a href="#skills" class="hover:opacity-50 transition-opacity">SKILLS</a>
+            <a href="#contact" class="hover:opacity-50 transition-opacity">CONTACT</a>
+        </div>
+        <!-- Mobile Menu Icon -->
+        <button class="md:hidden text-2xl" onclick="toggleMobileMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+    </nav>
+    
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenu" class="fixed inset-0 bg-black text-white z-40 hidden flex-col justify-center items-center gap-8 text-2xl brand-font">
+        <a href="#about" onclick="toggleMobileMenu()">ABOUT</a>
+        <a href="#projects" onclick="toggleMobileMenu()">WORK</a>
+        <a href="#skills" onclick="toggleMobileMenu()">SKILLS</a>
+        <a href="#contact" onclick="toggleMobileMenu()">CONTACT</a>
+        <button class="absolute top-6 right-6" onclick="toggleMobileMenu()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="min-h-screen flex flex-col lg:flex-row items-center justify-center px-6 lg:px-24 pt-20 gap-12 lg:gap-20">
+        <!-- Text Content -->
+        <div class="lg:w-1/2 order-2 lg:order-1 text-center lg:text-left">
+            <p class="text-sm font-medium mb-4 tracking-widest uppercase text-gray-500">Portfolio 2026</p>
+            <h1 class="text-5xl lg:text-7xl font-extrabold mb-6 leading-tight">
+                SHAWN<br>PETER<br>BRITTO
+            </h1>
+            <p class="text-lg lg:text-xl text-gray-600 mb-8 max-w-lg mx-auto lg:mx-0 font-light">
+                AI & ML Undergraduate passionate about developing intelligent models and web applications.
+            </p>
+            <div class="flex gap-4 justify-center lg:justify-start">
+                <a href="#contact" class="px-8 py-3 bg-black text-white rounded-full font-medium hover:bg-gray-800 transition-colors">
+                    Let's Talk
+                </a>
+                <a href="https://github.com/Shawnpeter578" target="_blank" class="px-8 py-3 border border-black rounded-full font-medium hover:bg-black hover:text-white transition-colors">
+                    GitHub
+                </a>
+            </div>
+        </div>
+
+        <!-- The TV Element -->
+        <div class="lg:w-1/2 order-1 lg:order-2 flex justify-center">
+            <div class="tv-container" id="retroTV">
+                <div class="tv-screen-bezel">
+                    <div class="tv-screen">
+                        <canvas id="tvCanvas"></canvas>
+                        <div class="channel-osd" id="channelOSD">CH 01</div>
+                    </div>
+                </div>
+                <div class="tv-controls">
+                    <div class="text-xs text-gray-500 mr-2 font-mono hidden sm:block">CHANNEL</div>
+                    <div class="knob" id="channelKnob" onclick="changeChannel()" title="Switch Channel"></div>
+                    <div class="text-xs text-gray-500 mx-2 font-mono hidden sm:block">POWER</div>
+                    <div class="knob" id="powerKnob" onclick="togglePower()" title="Power"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Education & About -->
+    <section id="about" class="py-24 px-6 lg:px-24 bg-white">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex flex-col md:flex-row gap-12">
+                <div class="md:w-1/3">
+                    <h2 class="text-3xl font-bold mb-6 brand-font">EDUCATION</h2>
+                </div>
+                <div class="md:w-2/3 space-y-8">
+                    <div class="border-l-2 border-black pl-6 py-1">
+                        <h3 class="text-xl font-bold">St. Aloysius (Deemed to be University)</h3>
+                        <p class="text-gray-500">Mangaluru, India | Present</p>
+                        <p class="mt-2 text-gray-700">Undergraduate Studies</p>
+                    </div>
+                    <div class="border-l-2 border-gray-200 pl-6 py-1 hover:border-black transition-colors">
+                        <h3 class="text-xl font-bold">St. Joseph's PU College</h3>
+                        <p class="text-gray-500">Mangaluru, India | May 2025</p>
+                    </div>
+                    <div class="border-l-2 border-gray-200 pl-6 py-1 hover:border-black transition-colors">
+                        <h3 class="text-xl font-bold">St. Joseph's High School</h3>
+                        <p class="text-gray-500">Mangaluru, India</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-20 flex flex-col md:flex-row gap-12">
+                 <div class="md:w-1/3">
+                    <h2 class="text-3xl font-bold mb-6 brand-font">OBJECTIVE</h2>
+                </div>
+                 <div class="md:w-2/3">
+                      <p class="text-xl leading-relaxed text-gray-800">
+                          I combine strong Python and C skills with SQL databases to build smart, functional software. As an aspiring AI & ML specialist, I am dedicated to creating impactful web applications and intelligent solutions.
+                      </p>
+                  </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects -->
+    <section id="projects" class="py-24 px-6 lg:px-24 bg-[var(--bg-color)]">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex justify-between items-end mb-16">
+                <h2 class="text-4xl lg:text-5xl font-bold brand-font">SELECTED<br>WORK</h2>
+                <span class="text-sm font-medium tracking-widest hidden md:block">01 — 04</span>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Project 1 -->
+                <div class="project-card bg-white p-8 rounded-xl relative group">
+                    <div class="absolute top-6 right-6 bg-black text-white text-xs px-2 py-1 rounded">WEB DEV</div>
+                    <h3 class="text-2xl font-bold mb-3 mt-4">Resonance Fest Website</h3>
+                    <p class="text-gray-600 mb-6 text-sm">HTML, CSS, Node JS, Mongo DB</p>
+                    <p class="text-gray-800 mb-6">Designed and built the festival website. Employed AI tools like Gemini Pro to optimize development speed and efficiency.</p>
+                </div>
+
+                <!-- Project 2 -->
+                <div class="project-card bg-white p-8 rounded-xl relative group">
+                    <div class="absolute top-6 right-6 bg-black text-white text-xs px-2 py-1 rounded">FULL STACK</div>
+                    <h3 class="text-2xl font-bold mb-3 mt-4">Summer of Code</h3>
+                    <p class="text-gray-600 mb-6 text-sm">HTML, CSS, JS, PHP, MySQL</p>
+                    <p class="text-gray-800 mb-6">Lead developer for a collaboration platform where students build software together. Handled both frontend and backend.</p>
+                </div>
+
+                <!-- Project 3 -->
+                <div class="project-card bg-white p-8 rounded-xl relative group">
+                    <div class="absolute top-6 right-6 bg-black text-white text-xs px-2 py-1 rounded">STARTUP</div>
+                    <h3 class="text-2xl font-bold mb-3 mt-4">Find Me Activity</h3>
+                    <p class="text-gray-600 mb-6 text-sm">React, Node JS, HTML/CSS</p>
+                    <p class="text-gray-800 mb-6">Founder and lead designer of an aspiring startup app allowing users to host and join local events or clubs.</p>
+                </div>
+
+                <!-- Project 4 -->
+                <div class="project-card bg-white p-8 rounded-xl relative group">
+                    <div class="absolute top-6 right-6 bg-black text-white text-xs px-2 py-1 rounded">GAME DEV</div>
+                    <h3 class="text-2xl font-bold mb-3 mt-4">Guess US State Game</h3>
+                    <p class="text-gray-600 mb-6 text-sm">Python, Turtle</p>
+                    <p class="text-gray-800 mb-6">A graphical UI game built with Python's Turtle library where players challenge their geography knowledge.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Marquee -->
+    <section id="skills" class="py-16 bg-black text-white overflow-hidden">
+        <div class="flex whitespace-nowrap gap-12 text-4xl lg:text-6xl font-bold brand-font animate-marquee">
+            <span>PYTHON</span> <span class="text-gray-600">*</span>
+            <span>MACHINE LEARNING</span> <span class="text-gray-600">*</span>
+            <span>C PROGRAMMING</span> <span class="text-gray-600">*</span>
+            <span>PHP</span> <span class="text-gray-600">*</span>
+            <span>MYSQL</span> <span class="text-gray-600">*</span>
+            <span>HTML & CSS</span> <span class="text-gray-600">*</span>
+            <span>JAVASCRIPT</span> <span class="text-gray-600">*</span>
+            <span>GIT</span> <span class="text-gray-600">*</span>
+            <span>VS CODE</span> <span class="text-gray-600">*</span>
+            <!-- Duplicated for smooth loop -->
+            <span>PYTHON</span> <span class="text-gray-600">*</span>
+            <span>MACHINE LEARNING</span> <span class="text-gray-600">*</span>
+            <span>C PROGRAMMING</span> <span class="text-gray-600">*</span>
+            <span>PHP</span> <span class="text-gray-600">*</span>
+        </div>
+    </section>
+
+    <style>
+        .animate-marquee {
+            animation: marquee 20s linear infinite;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+    </style>
+
+    <!-- Contact -->
+    <section id="contact" class="py-24 px-6 lg:px-24 bg-white flex flex-col items-center text-center">
+        <p class="text-sm font-medium mb-6 tracking-widest uppercase text-gray-500">Get in touch</p>
+        <h2 class="text-4xl lg:text-6xl font-bold brand-font mb-12">Let's work together.</h2>
+        
+        <div class="space-y-6">
+            <a href="mailto:shawnbritto69@gmail.com" class="block text-2xl lg:text-3xl hover:text-blue-600 transition-colors">
+                shawnbritto69@gmail.com
+            </a>
+            <a href="tel:+917483872220" class="block text-xl text-gray-500 hover:text-black">
+                +91 74838 72220
+            </a>
+            <div class="flex justify-center gap-6 mt-8">
+                <a href="https://github.com/Shawnpeter578" target="_blank" class="text-3xl hover:scale-110 transition-transform">
+                    <i class="fab fa-github"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black text-white py-12 px-6 lg:px-24 border-t border-gray-800">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
+            
+            <!-- Brand Column -->
+            <div class="md:w-1/3">
+                <a href="#" class="text-3xl font-bold brand-font tracking-tighter mb-4 block">SPB.</a>
+                <p class="text-gray-400 text-sm leading-relaxed max-w-xs">
+                    Crafting intelligent digital experiences with code and creativity.
+                </p>
+            </div>
+
+            <!-- Links Column -->
+            <div class="md:w-1/3 flex gap-12">
+                <div class="flex flex-col gap-4 text-sm font-medium">
+                    <span class="text-gray-500 uppercase tracking-widest text-xs mb-2">Menu</span>
+                    <a href="#about" class="hover:text-gray-400 transition-colors">About</a>
+                    <a href="#projects" class="hover:text-gray-400 transition-colors">Work</a>
+                    <a href="#skills" class="hover:text-gray-400 transition-colors">Skills</a>
+                </div>
+                <div class="flex flex-col gap-4 text-sm font-medium">
+                    <span class="text-gray-500 uppercase tracking-widest text-xs mb-2">Connect</span>
+                    <a href="https://github.com/Shawnpeter578" target="_blank" class="hover:text-gray-400 transition-colors">GitHub</a>
+                    <a href="mailto:shawnbritto69@gmail.com" class="hover:text-gray-400 transition-colors">Email</a>
+                    <a href="tel:+917483872220" class="hover:text-gray-400 transition-colors">Phone</a>
+                </div>
+            </div>
+
+            <!-- Back to Top -->
+            <div class="md:w-1/3 flex justify-start md:justify-end">
+                <a href="#" class="group flex items-center gap-2 text-sm font-medium hover:text-gray-400 transition-colors">
+                    BACK TO TOP
+                    <i class="fas fa-arrow-up group-hover:-translate-y-1 transition-transform"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="max-w-6xl mx-auto mt-12 pt-8 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">
+            <p>&copy; 2026 Shawn Peter Britto. All rights reserved.</p>
+            <p class="mt-2 md:mt-0">Designed & Built by SPB.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // --- TV SYSTEM LOGIC ---
+        const canvas = document.getElementById('tvCanvas');
+        const ctx = canvas.getContext('2d');
+        const osd = document.getElementById('channelOSD');
+        const channelKnob = document.getElementById('channelKnob');
+        const powerKnob = document.getElementById('powerKnob');
+
+        let isTvOn = true;
+        let currentChannelIndex = 0;
+        let animationId;
+        let frameCount = 0;
+        let osdTimeout;
+
+        // --- RESIZE HANDLER ---
+        function resizeCanvas() {
+            // Get parent dimensions to ensure full fit
+            const parent = canvas.parentElement;
+            canvas.width = parent.offsetWidth;
+            canvas.height = parent.offsetHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // --- CHANNEL DATA & VARIABLES ---
+        
+        // Channel 1: Matrix Rain variables
+        const matrixChars = "010101XYZΩπΣSPB";
+        let drops = [];
+        
+        // Channel 2: Pong variables
+        let ball = { x: 50, y: 50, dx: 3, dy: 3, size: 5 };
+        let paddle1 = { y: 40, h: 40 };
+        let paddle2 = { y: 40, h: 40 };
+
+        // Channel 3: Sine Wave variables
+        let waveOffset = 0;
+
+        // Init matrix drops
+        function initMatrix() {
+            const columns = Math.floor(canvas.width / 12);
+            drops = [];
+            for (let i = 0; i < columns; i++) {
+                drops[i] = Math.random() * -100; // start above screen
+            }
+        }
+
+        // --- RENDER FUNCTIONS ---
+
+        // 1. Static Noise
+        function drawStatic() {
+            const w = canvas.width;
+            const h = canvas.height;
+            const idata = ctx.createImageData(w, h);
+            const buffer32 = new Uint32Array(idata.data.buffer);
+            
+            for (let i = 0; i < buffer32.length; i++) {
+                if (Math.random() < 0.1) buffer32[i] = 0xffffffff; // white
+                else if (Math.random() < 0.05) buffer32[i] = 0xff000000; // black
+                // otherwise transparent (bg color)
+            }
+            ctx.putImageData(idata, 0, 0);
+            
+            // Text Overlay
+            ctx.fillStyle = "rgba(0,0,0,0.5)";
+            ctx.fillRect(0, h/2 - 20, w, 40);
+            ctx.font = "20px monospace";
+            ctx.fillStyle = "#fff";
+            ctx.textAlign = "center";
+            ctx.fillText("NO SIGNAL", w/2, h/2 + 7);
+        }
+
+        // 2. Matrix Rain
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.1)"; // fade trail
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "#0f0";
+            ctx.font = "12px monospace";
+            
+            for (let i = 0; i < drops.length; i++) {
+                const text = matrixChars.charAt(Math.floor(Math.random() * matrixChars.length));
+                ctx.fillText(text, i * 12, drops[i] * 12);
+                
+                if (drops[i] * 12 > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        // 3. Retro Pong (AI vs AI)
+        function drawPong() {
+            // Clear trail
+            ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#fff";
+
+            // Draw center line
+            for(let i=0; i<canvas.height; i+=15) {
+                ctx.fillRect(canvas.width/2 - 1, i, 2, 8);
+            }
+
+            // Move ball
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Wall collision (top/bottom)
+            if (ball.y < 0 || ball.y > canvas.height) ball.dy *= -1;
+
+            // AI Paddle movement (simple tracking)
+            const speed = 2.5;
+            // Left paddle follows ball
+            if (paddle1.y + paddle1.h/2 < ball.y) paddle1.y += speed;
+            else paddle1.y -= speed;
+            // Right paddle follows ball
+            if (paddle2.y + paddle2.h/2 < ball.y) paddle2.y += speed;
+            else paddle2.y -= speed;
+
+            // Clamp paddles
+            if(paddle1.y < 0) paddle1.y = 0;
+            if(paddle1.y > canvas.height - paddle1.h) paddle1.y = canvas.height - paddle1.h;
+            if(paddle2.y < 0) paddle2.y = 0;
+            if(paddle2.y > canvas.height - paddle2.h) paddle2.y = canvas.height - paddle2.h;
+
+            // Paddle Collision
+            // Left
+            if (ball.x < 15 && ball.y > paddle1.y && ball.y < paddle1.y + paddle1.h) {
+                ball.dx = Math.abs(ball.dx);
+            }
+            // Right
+            if (ball.x > canvas.width - 15 && ball.y > paddle2.y && ball.y < paddle2.y + paddle2.h) {
+                ball.dx = -Math.abs(ball.dx);
+            }
+
+            // Reset if out of bounds
+            if (ball.x < 0 || ball.x > canvas.width) {
+                ball.x = canvas.width / 2;
+                ball.y = canvas.height / 2;
+            }
+
+            // Draw ball & paddles
+            ctx.fillRect(ball.x, ball.y, ball.size, ball.size);
+            ctx.fillRect(5, paddle1.y, 8, paddle1.h);
+            ctx.fillRect(canvas.width - 13, paddle2.y, 8, paddle2.h);
+        }
+
+        // 4. Color Bars
+        function drawBars() {
+            const w = canvas.width;
+            const h = canvas.height;
+            const colors = ['#fff', '#ff0', '#0ff', '#0f0', '#f0f', '#f00', '#00f'];
+            const barW = w / colors.length;
+            
+            for(let i=0; i<colors.length; i++) {
+                ctx.fillStyle = colors[i];
+                ctx.fillRect(i * barW, 0, barW, h * 0.75);
+            }
+            
+            // Bottom bars
+            const bottomColors = ['#00f', '#131313', '#f0f', '#131313', '#0ff', '#131313', '#fff'];
+            for(let i=0; i<bottomColors.length; i++) {
+                ctx.fillStyle = bottomColors[i];
+                ctx.fillRect(i * barW, h * 0.75, barW, h * 0.25);
+            }
+        }
+
+        // 5. Waveform Visualizer
+        function drawWave() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "#0f0";
+            
+            const amplitude = 30;
+            const frequency = 0.05;
+            const cy = canvas.height / 2;
+
+            for(let x = 0; x < canvas.width; x++) {
+                const y = cy + Math.sin(x * frequency + waveOffset) * amplitude * Math.sin(waveOffset * 0.5);
+                if(x===0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            waveOffset += 0.2;
+            
+            // Text
+            ctx.fillStyle = "#0f0";
+            ctx.font = "10px monospace";
+            ctx.fillText("AUDIO VISUALIZER // 48KHz", 10, 20);
+        }
+
+        // --- MAIN LOOP ---
+        const channels = [
+            { id: 0, name: "MATRIX", draw: drawMatrix },
+            { id: 1, name: "GAME", draw: drawPong },
+            { id: 2, name: "TEST", draw: drawBars },
+            { id: 3, name: "AUDIO", draw: drawWave },
+            { id: 4, name: "STATIC", draw: drawStatic }
+        ];
+
+        function animate() {
+            if (!isTvOn) return;
+
+            // Clear logic handled inside specific draw functions for trails
+            // or just full redraw
+            
+            channels[currentChannelIndex].draw();
+            
+            // Scanline overlay effect (moving)
+            if(frameCount % 2 === 0) {
+                 ctx.fillStyle = "rgba(0,0,0,0.1)";
+                 ctx.fillRect(0, (frameCount % canvas.height), canvas.width, 2);
+            }
+
+            frameCount++;
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        initMatrix();
+        animate();
+
+        // --- CONTROLS ---
+
+        function changeChannel() {
+            if (!isTvOn) return;
+            
+            // Static Burst Visual
+            const originalOpacity = canvas.style.opacity || 1;
+            canvas.style.opacity = 0.5; // Flicker
+            
+            // Rotate Knob
+            const currentRot = channelKnob.dataset.rotation ? parseInt(channelKnob.dataset.rotation) : 0;
+            const newRot = currentRot + 45;
+            channelKnob.style.transform = `rotate(${newRot}deg)`;
+            channelKnob.dataset.rotation = newRot;
+
+            // Change Channel Index
+            currentChannelIndex = (currentChannelIndex + 1) % channels.length;
+            
+            // Re-init specific channels if needed
+            if(currentChannelIndex === 0) initMatrix(); // Reset matrix drops
+            if(currentChannelIndex === 1) ball = { x: 50, y: 50, dx: 3, dy: 3, size: 5 }; // Reset Pong
+
+            setTimeout(() => {
+                canvas.style.opacity = originalOpacity;
+                showOSD(`CH ${currentChannelIndex + 1}: ${channels[currentChannelIndex].name}`);
+            }, 150);
+        }
+
+        function showOSD(text) {
+            osd.innerText = text;
+            osd.style.opacity = 1;
+            clearTimeout(osdTimeout);
+            osdTimeout = setTimeout(() => {
+                osd.style.opacity = 0;
+            }, 2000);
+        }
+
+        function togglePower() {
+            isTvOn = !isTvOn;
+            const screen = document.querySelector('.tv-screen');
+            
+            // Rotate Power Knob
+            const currentRot = powerKnob.dataset.rotation ? parseInt(powerKnob.dataset.rotation) : 0;
+            const newRot = currentRot + 45;
+            powerKnob.style.transform = `rotate(${newRot}deg)`;
+            powerKnob.dataset.rotation = newRot;
+
+            if (isTvOn) {
+                screen.style.background = "radial-gradient(circle, #1a1a1a 0%, #000000 100%)";
+                canvas.style.display = "block";
+                osd.style.display = "block";
+                animate();
+                showOSD("POWER ON");
+            } else {
+                screen.style.background = "#050505";
+                canvas.style.display = "none";
+                osd.style.display = "none";
+                cancelAnimationFrame(animationId);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Turn off animation (White dot)
+                const dot = document.createElement('div');
+                Object.assign(dot.style, {
+                    position: 'absolute', top: '50%', left: '50%',
+                    width: '100%', height: '2px', background: '#fff',
+                    zIndex: '10', transition: 'all 0.3s ease-out',
+                    transform: 'translate(-50%, -50%)'
+                });
+                screen.appendChild(dot);
+                
+                setTimeout(() => {
+                    dot.style.width = '2px';
+                    dot.style.height = '2px';
+                    setTimeout(() => dot.remove(), 200);
+                }, 100);
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+            menu.classList.toggle('flex');
+        }
+    </script>
+</body>
+</html>
